@@ -1,0 +1,25 @@
+# YOLO weights
+*.pt
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Logs
+*.log
+runs/
+
+# Dataset
+datasets/octopus_segmentation/train/
+datasets/octopus_segmentation/valid/
+datasets/octopus_segmentation/test/
+
+# IDE
+.vscode/
+.idea/ 
