@@ -1,16 +1,27 @@
-# Octopus Detection with YOLOv8
+# Octopus YOLOv8 Segmentation Model
 
-This project implements an octopus detection system using YOLOv8, trained on underwater octopus images. The model can detect octopuses in various underwater conditions with high accuracy.
+This repository contains code for training a YOLOv8 segmentation model to detect and segment octopuses in images.
 
-## Features
+## Project Structure
 
-- YOLOv8 model trained specifically for octopus detection
-- Easy-to-use prediction script with visualization
-- High accuracy on underwater images
-- Real-time detection capabilities
-- Support for both image and video input
+```
+train_yolo_hacker/
+├── datasets/
+│   └── octopus_segmentation/
+│       ├── train/
+│       │   ├── images/      # Training images
+│       │   └── labels/      # Training labels
+│       ├── valid/
+│       │   ├── images/      # Validation images
+│       │   └── labels/      # Validation labels
+│       ├── test/
+│       │   ├── images/      # Test images
+│       │   └── labels/      # Test labels
+│       └── data.yaml        # Dataset configuration
+└── train_segmentation.py    # Training script
+```
 
-## Installation
+## Setup
 
 1. Clone the repository:
 
@@ -22,93 +33,56 @@ cd octopus_yolo_model
 2. Install dependencies:
 
 ```bash
-pip install -r requirements.txt
+pip install ultralytics torch
 ```
 
-## Usage
+3. Configure dataset paths in `datasets/octopus_segmentation/data.yaml`:
 
-### Making Predictions
+```yaml
+names:
+  - octopus
+nc: 1
+test: C:/Users/klipk/train_yolo_hacker/datasets/octopus_segmentation/test/images
+train: C:/Users/klipk/train_yolo_hacker/datasets/octopus_segmentation/train/images
+val: C:/Users/klipk/train_yolo_hacker/datasets/octopus_segmentation/valid/images
+```
 
-To detect octopuses in an image or video:
+## Training
+
+To train the model:
 
 ```bash
-python predict.py path/to/your/image.jpg
+python train_segmentation.py --model-size m --epochs 100 --batch-size 16
 ```
 
-Optional arguments:
+### Training Parameters
 
-- `--conf`: Confidence threshold (default: 0.25)
-- `--model`: Path to model weights (default: runs/detect/train3/weights/best.pt)
-- `--source`: Input source (image, video, or webcam)
-- `--save`: Save results to file
-- `--show`: Show results in window
-
-Example:
-
-```bash
-# Basic usage with image
-python predict.py test_image.jpg
-
-# With custom confidence threshold
-python predict.py test_image.jpg --conf 0.5
-
-# Process video file
-python predict.py video.mp4 --save
-
-# Use webcam
-python predict.py 0 --show
-```
-
-### Training (Optional)
-
-If you want to retrain the model:
-
-```bash
-python trainer.py
-```
-
-Training parameters can be modified in the `trainer.py` script. The current configuration uses standard YOLOv8 training parameters which can be adjusted based on your specific needs.
-
-## Model Performance
-
-The model is currently in training. Performance metrics will be updated here once training is complete.
+- `--model-size`: YOLOv8 model size (n, s, m, l, x)
+- `--epochs`: Number of training epochs
+- `--batch-size`: Batch size for training
+- `--imgsz`: Input image size (default: 640)
+- `--device`: Device to train on (cuda device or cpu)
 
 ## Dataset
 
-The model was trained on a custom dataset of underwater octopus images:
+The dataset contains approximately 2000 images of octopuses with corresponding segmentation masks. The images are split into training, validation, and test sets.
 
-- Total images: 1,200
-- Training split: 70%
-- Validation split: 20%
-- Test split: 10%
-- Image resolution: 1920x1080
-- Label format: YOLO format
+## Model
 
-## Project Structure
+We use YOLOv8, specifically the medium-sized model (YOLOv8m) for instance segmentation. The model is trained to detect and segment octopuses in images.
 
-```
-octopus_yolo_model/
-├── runs/
-│   └── detect/
-│       └── train3/
-│           └── weights/
-│               └── best.pt    # Trained model
-├── dataset/                   # Training data
-│   ├── images/               # Original images
-│   ├── labels/               # YOLO format labels
-│   ├── train/                # Training split
-│   ├── valid/                # Validation split
-│   └── test/                 # Test split
-├── predict.py                # Prediction script
-├── trainer.py                # Training script
-├── requirements.txt          # Dependencies
-└── README.md                 # This file
-```
+## Results
+
+Training results and model checkpoints will be saved in the `runs/segment/` directory.
 
 ## Contributing
 
-Feel free to submit issues and enhancement requests!
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 
-MIT License
+This project is licensed under the MIT License - see the LICENSE file for details.
