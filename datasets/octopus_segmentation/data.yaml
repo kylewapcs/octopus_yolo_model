@@ -1,6 +1,6 @@
 names:
   - octopus
 nc: 1
-test: test/images
-train: train/images
-val: valid/images
+test: C:/Users/klipk/train_yolo_hacker/datasets/octopus_segmentation/test/images
+train: C:/Users/klipk/train_yolo_hacker/datasets/octopus_segmentation/train/images
+val: C:/Users/klipk/train_yolo_hacker/datasets/octopus_segmentation/valid/images
