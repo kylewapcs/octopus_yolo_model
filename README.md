@@ -1,6 +1,24 @@
 # Octopus YOLOv8 Segmentation Model
 
-This repository contains code for training a YOLOv8 segmentation model to detect and segment octopuses in images.
+This repository contains code for training a YOLOv8 segmentation model to detect and segment octopuses in underwater images.
+
+## Dataset
+
+The dataset contains 2000 underwater images:
+
+- ~780 images with octopus annotations (segmentation masks)
+- The remaining images are negative examples (no octopus)
+- Split into training (80%), validation (10%), and test (10%) sets
+
+## Model
+
+We use YOLOv8m-seg (medium-sized model) for instance segmentation:
+
+- Input size: 640x640
+- Backbone: CSPDarknet
+- Neck: PANet
+- Head: Segmentation head with mask prediction
+- Training: 100 epochs with AdamW optimizer
 
 ## Project Structure
 
@@ -9,16 +27,18 @@ train_yolo_hacker/
 ├── datasets/
 │   └── octopus_segmentation/
 │       ├── train/
-│       │   ├── images/      # Training images
-│       │   └── labels/      # Training labels
+│       │   ├── images/      # Training images (1600 images)
+│       │   └── labels/      # Training labels (segmentation masks)
 │       ├── valid/
-│       │   ├── images/      # Validation images
+│       │   ├── images/      # Validation images (200 images)
 │       │   └── labels/      # Validation labels
 │       ├── test/
-│       │   ├── images/      # Test images
+│       │   ├── images/      # Test images (200 images)
 │       │   └── labels/      # Test labels
 │       └── data.yaml        # Dataset configuration
-└── train_segmentation.py    # Training script
+├── train_segmentation.py    # Training script
+├── predict_segmentation.py  # Prediction & visualization script
+└── requirements.txt        # Dependencies
 ```
 
 ## Setup
@@ -33,7 +53,7 @@ cd octopus_yolo_model
 2. Install dependencies:
 
 ```bash
-pip install ultralytics torch
+pip install ultralytics torch opencv-python
 ```
 
 3. Configure dataset paths in `datasets/octopus_segmentation/data.yaml`:
@@ -63,17 +83,42 @@ python train_segmentation.py --model-size m --epochs 100 --batch-size 16
 - `--imgsz`: Input image size (default: 640)
 - `--device`: Device to train on (cuda device or cpu)
 
-## Dataset
+## Making Predictions
 
-The dataset contains approximately 2000 images of octopuses with corresponding segmentation masks. The images are split into training, validation, and test sets.
+To run predictions and visualize results:
 
-## Model
+```bash
+python predict_segmentation.py --source path/to/image.jpg --model runs/segment/train/weights/best.pt --output predictions
+```
 
-We use YOLOv8, specifically the medium-sized model (YOLOv8m) for instance segmentation. The model is trained to detect and segment octopuses in images.
+Parameters:
+
+- `--source`: Path to image or directory of images
+- `--model`: Path to trained model weights
+- `--conf`: Confidence threshold (default: 0.25)
+- `--output`: Output directory for visualizations
+
+The script will:
+
+1. Run prediction on the input image(s)
+2. Draw segmentation masks in green
+3. Save visualizations to the output directory
 
 ## Results
 
-Training results and model checkpoints will be saved in the `runs/segment/` directory.
+Training results and model checkpoints are saved in `runs/segment/train/`:
+
+- `weights/best.pt`: Best model weights
+- `weights/last.pt`: Last epoch weights
+- Training plots and metrics in the same directory
+
+## Model Performance
+
+The model achieves:
+
+- Training set: [metrics to be added after training]
+- Validation set: [metrics to be added after training]
+- Test set: [metrics to be added after training]
 
 ## Contributing
 

@@ -7,7 +7,6 @@ import yaml
 import cv2
 import numpy as np
 from bs4 import BeautifulSoup
-import re
 
 def parse_xml_annotations(xml_path):
     """Parse XML annotation file to extract polygon points for each image"""
@@ -34,8 +33,8 @@ def parse_xml_annotations(xml_path):
             if points:
                 polygons.append(points)
         
-        if polygons:
-            annotations[filename] = polygons
+        # Store annotations even if no polygons (means no octopus in image)
+        annotations[filename] = polygons
     
     return annotations
 
@@ -53,12 +52,7 @@ def convert_polygons_to_yolo_seg(polygons, img_width, img_height):
     return yolo_segments
 
 def setup_octopus_segmentation_dataset(zip_files_list):
-    """
-    Sets up the octopus segmentation dataset from zip files with XML annotations
-    
-    Args:
-        zip_files_list: List of paths to your zip files
-    """
+    """Sets up the octopus segmentation dataset from zip files"""
     # Base paths
     base_dir = Path('datasets/octopus_segmentation')
     temp_dir = base_dir / 'temp'
@@ -94,22 +88,23 @@ def setup_octopus_segmentation_dataset(zip_files_list):
                     image_files = list(images_dir.glob('*.jpg'))
                     image_files.extend(list(images_dir.glob('*.png')))
                     
+                    # Include all images, with or without annotations
                     for img_path in image_files:
-                        if img_path.name in annotations:
-                            all_images.append((img_path, annotations[img_path.name]))
+                        polygons = annotations.get(img_path.name, [])  # Empty list if no annotations
+                        all_images.append((img_path, polygons))
                     
-                    print(f"Found {len(image_files)} images with annotations in {zip_path}")
+                    print(f"Found {len(image_files)} images in {zip_path}")
                 else:
                     print(f"Warning: Missing images folder or annotations.xml in {zip_path}")
         except Exception as e:
             print(f"Error processing {zip_path}: {str(e)}")
     
     if not all_images:
-        print("Error: No images with annotations found in any of the zip files!")
+        print("Error: No images found in any of the zip files!")
         return
     
     # Shuffle all images
-    print(f"\nTotal images with annotations found: {len(all_images)}")
+    print(f"\nTotal images found: {len(all_images)}")
     random.shuffle(all_images)
     
     # Split files (80% train, 10% valid, 10% test)
@@ -133,15 +128,13 @@ def setup_octopus_segmentation_dataset(zip_files_list):
                 continue
             height, width = img.shape[:2]
             
-            # Convert polygons to YOLO format
-            segments = convert_polygons_to_yolo_seg(polygons, width, height)
-            
             # Move image
             dest_img_path = base_dir / split_name / 'images' / img_path.name
             shutil.copy2(img_path, dest_img_path)
             
-            # Save YOLO format segmentation labels
-            if segments:
+            # Save YOLO format segmentation labels if there are annotations
+            if polygons:
+                segments = convert_polygons_to_yolo_seg(polygons, width, height)
                 dest_label_path = base_dir / split_name / 'labels' / (img_path.stem + '.txt')
                 with open(dest_label_path, 'w') as f:
                     for segment in segments:
@@ -149,13 +142,13 @@ def setup_octopus_segmentation_dataset(zip_files_list):
                         line = '0 ' + ' '.join(map(str, segment)) + '\n'
                         f.write(line)
     
-    # Create data.yaml
+    # Create data.yaml with absolute paths
     yaml_content = {
         'train': str(base_dir / 'train' / 'images'),
         'val': str(base_dir / 'valid' / 'images'),
         'test': str(base_dir / 'test' / 'images'),
-        'nc': 1,  # number of classes
-        'names': ['octopus']  # class names
+        'nc': 1,
+        'names': ['octopus']
     }
     
     with open(base_dir / 'data.yaml', 'w') as f:
@@ -174,7 +167,7 @@ def setup_octopus_segmentation_dataset(zip_files_list):
 if __name__ == "__main__":
     # List all your zip files here
     zip_files = [
-        r"C:\Users\klipk\Downloads\batch1.zip",  # New batch1
+        r"C:\Users\klipk\Downloads\batch1.zip",
         r"C:\Users\klipk\Downloads\batch2.zip",
         r"C:\Users\klipk\Downloads\batch3.zip",
         r"C:\Users\klipk\Downloads\batch4.zip",
