@@ -72,37 +72,27 @@ def extract_zip_files(zip_dir: str, extract_dir: str):
         else:
             logging.warning(f"No annotations.xml found in {zip_file}")
 
-def convert_polygon_to_bbox(points_str):
-    """Convert polygon points to YOLO format bounding box."""
+def convert_polygon_to_yolo(points_str, img_width, img_height):
+    """Convert polygon points to YOLO segmentation format."""
     # Parse points string into x,y coordinates
     points = []
     for point in points_str.split(';'):
         if ',' in point:
             x, y = map(float, point.split(','))
-            points.append((x, y))
+            # Normalize coordinates
+            x_norm = x / img_width
+            y_norm = y / img_height
+            points.append((x_norm, y_norm))
     
     if not points:
         return None
-        
-    # Convert to numpy array for easier manipulation
-    points = np.array(points)
     
-    # Get min/max coordinates
-    x_min = np.min(points[:, 0])
-    y_min = np.min(points[:, 1])
-    x_max = np.max(points[:, 0])
-    y_max = np.max(points[:, 1])
-    
-    # Convert to YOLO format (x_center, y_center, width, height) normalized
-    x_center = (x_min + x_max) / 2
-    y_center = (y_min + y_max) / 2
-    width = x_max - x_min
-    height = y_max - y_min
-    
-    return x_center, y_center, width, height
+    # Format as YOLO segmentation line: class_id x1 y1 x2 y2 ... xn yn
+    yolo_line = "0 " + " ".join([f"{x} {y}" for x, y in points])
+    return yolo_line
 
 def convert_xml_to_yolo(xml_path: str, image_dir: str, output_dir: str):
-    """Converts XML annotations to YOLO format."""
+    """Converts XML annotations to YOLO segmentation format."""
     try:
         tree = ET.parse(xml_path)
         root = tree.getroot()
@@ -140,21 +130,12 @@ def convert_xml_to_yolo(xml_path: str, image_dir: str, output_dir: str):
                     if not points_str:
                         continue
                         
-                    # Convert polygon to YOLO format bbox
-                    bbox = convert_polygon_to_bbox(points_str)
-                    if bbox is None:
+                    # Convert polygon to YOLO segmentation format
+                    yolo_line = convert_polygon_to_yolo(points_str, width, height)
+                    if yolo_line is None:
                         continue
                         
-                    x_center, y_center, box_width, box_height = bbox
-                    
-                    # Normalize coordinates
-                    x_center /= width
-                    y_center /= height
-                    box_width /= width
-                    box_height /= height
-                    
-                    # Class id is 0 for octopus
-                    f.write(f"0 {x_center} {y_center} {box_width} {box_height}\n")
+                    f.write(yolo_line + '\n')
             
             conversion_count += 1
             
