@@ -24,7 +24,7 @@ This repository contains code for training a YOLOv8 segmentation model to detect
 3. **Training**
 
    ```bash
-   python trainer.py
+   python trainer.py --dataset_path datasets/octopus_dataset --model yolov8n.pt --epochs 100 --imgsz 640 --batch 16 --device 0
    ```
 
    Note: Training requires a GPU for reasonable performance
